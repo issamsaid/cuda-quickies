@@ -96,6 +96,7 @@ __device__ void sm_read_plane(DTYPE shm[BLOCKY+W-1][BLOCKX+W-1],
 	                            DTYPE gtab[][N+W-1][N+W-1], 
 													    int sx, int sy, 
 	                            int ix, int iy, int iz) {
+	
 	if (sx < 2*F) {
 		shm[sy][sx-F] = gtab[iz][iy][ix-F];
 		if (sy < 2*F) {
@@ -120,7 +121,7 @@ __device__ void sm_read_plane(DTYPE shm[BLOCKY+W-1][BLOCKX+W-1],
 			shm[sy+F][sx+F] = gtab[iz][iy+F][ix+F];
 		}
 	}	
-	shm[sy][sx] = gtab[iz][iy][ix];
+	shm[sy][sx] = gtab[iz][iy][ix];		
 }
 
 __device__ void rg_comp_plane(DTYPE rg[W],
@@ -156,13 +157,13 @@ __global__ void median_filter_gpu_sm_2d(DTYPE gtab[][N+W-1][N+W-1],
 	if((ix<(N+F)) && (iy<(N+F))) {
 		// bootstrap the registers:
 		for (int rz=0; rz<(W-1); rz++) {
-			//__syncthreads(); // this is completely useless but with out it the code fails !!!
+			__syncthreads(); 
 			sm_read_plane(shm, gtab, sx, sy, ix, iy, rz);
 			__syncthreads();
 			rg_comp_plane(rg, shm, sx, sy, rz);
 		}
 		for (int iz=F; iz<N+F; iz++) {
-			//__syncthreads(); // this is completely useless but with out it the code fails !!!
+			__syncthreads(); 
 			sm_read_plane(shm, gtab, sx, sy, ix, iy, iz+F);
 			__syncthreads();
 			rg_comp_plane(rg, shm, sx, sy, (W-1));
